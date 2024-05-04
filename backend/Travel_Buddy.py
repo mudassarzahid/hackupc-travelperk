@@ -21,10 +21,12 @@ date_input = st.date_input(
 )
 
 
-
-df_user = pd._read_csv('')
+#Get user's spotify profile
+#df_user = pd._read_csv('')
 
 if st.button("Search Travel Vibe Matching Buddies"):
+    #Get database of user's spotify profile
+    '''
     matches_data = pd.read_csv('')
     df_potential_matches = pd.DataFrame(matches_data)
     df_potential_matches["compatibility_score"] = (
@@ -44,4 +46,5 @@ if st.button("Search Travel Vibe Matching Buddies"):
     df_potential_matches = df_potential_matches.sort_values(by='compatibility_score')
     top_matches = df_potential_matches.head(3)
     data_to_insert = top_matches.to_dict(orient='records')
-
+    '''
+    #Add top 3 user names and spotify profile
