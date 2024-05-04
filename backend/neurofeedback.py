@@ -17,6 +17,8 @@ import numpy as np  # Module that simplifies computations on matrices
 import matplotlib.pyplot as plt  # Module used for plotting
 from pylsl import StreamInlet, resolve_byprop  # Module to receive EEG data
 import utils  # Our own utility functions
+import pandas as pd
+from datetime import datetime
 
 # Handy little enum to make code more readable
 
@@ -94,9 +96,11 @@ def neurofeedback_fn():
     print('Press Ctrl-C in the console to break the while loop.')
 
     try:
+        df_eeg = pd.Dataframe(columns = ['datetime','alpha','beta','theta'])
+        time_1 = datetime.now()        
+        i = 0
         # The following loop acquires data, computes band powers, and calculates neurofeedback metrics based on those band powers
-        while True:
-
+        while True: #Need to change it with time based loop
             """ 3.1 ACQUIRE DATA """
             # Obtain EEG data from the LSL stream
             eeg_data, timestamp = inlet.pull_chunk(
@@ -149,5 +153,15 @@ def neurofeedback_fn():
                 smooth_band_powers[Band.Alpha]
             print('Theta Relaxation (Creativity, insight, deep focused states, reduced consciousness): ', theta_metric)
 
+            time_2 = datetime.now()-time_1
+            df_eeg.append([time_2, alpha_metric, beta_metric, theta_metric])
+
+            if time_2 == 90:
+                df_eeg.to_csv('test_'+str(i)+'.csv', index=False)
+                time_1 = datetime.now()       
+                i = i+1
+                return df_eeg
+                df_eeg = pd.Dataframe(columns = ['datetime','alpha','beta','theta'])
+                
     except KeyboardInterrupt:
         print('Closing!')

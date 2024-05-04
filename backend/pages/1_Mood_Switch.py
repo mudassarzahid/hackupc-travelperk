@@ -45,29 +45,57 @@ if st.button("Start Playing Vibey Music"):
     #Spotify line
     st.write("Your brainwaves...")
     # time.sleep(10)
-    # neurofeedback.neurofeedback_fn()
+    df_eeg = neurofeedback.neurofeedback_fn()
 
     if option_a is True and option_t is False and option_b is False:
         st.write('Creating Calm and Relaxing Vibes')
-        # Sort by
+        if df_eeg.alpha_metrics.quantile([0.75]) - df_eeg.alpha_metrics.quantile([0.25])>0:
+            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+        elif df_eeg.alpha_metrics.quantile([0.75]) - df_eeg.alpha_metrics.quantile([0.25])<0:
+            print("Try next song from the initially made playlist")
+
     elif option_b is True and option_t is False and option_a is False:
         st.write("Creating High Octane and Adventurous Vibe")
-        # Sort by
+        if df_eeg.beta_metrics.quantile([0.75]) - df_eeg.alpha_metrics.quantile([0.25])>0:
+            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+        elif df_eeg.beta_metrics.quantile([0.75]) - df_eeg.alpha_metrics.quantile([0.25])<0:
+            print("Try next song from the initially made playlist")
+    
     elif option_t is True and option_a is False and option_b is False:
         st.write("Creating Focussed Vibe")
-        # Sort by
+        if df_eeg.theta_metrics.quantile([0.75]) - df_eeg.theta_metrics.quantile([0.25])>0:
+            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+        elif df_eeg.theta_metrics.quantile([0.75]) - df_eeg.theta_metrics.quantile([0.25])<0:
+            print("Try next song from the initially made playlist")    
+
     elif option_a and option_b:
         st.write("This might be messy but generating high octane relaxing music")
-        # Sort by
+        if (df_eeg.alpha_metrics.quantile([0.75]) - df_eeg.alpha_metrics.quantile([0.25])>0) and (df_eeg.beta_metrics.quantile([0.75]) - df_eeg.beta_metrics.quantile([0.25])>0):
+            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+        else:
+            print("Try next song from the initially made playlist")
+
     elif option_a and option_t:
         st.write("Creating Calm and Focussed Vibes")
-        # Sort by
+        if (df_eeg.alpha_metrics.quantile([0.75]) - df_eeg.alpha_metrics.quantile([0.25])>0) and (df_eeg.theta_metrics.quantile([0.75]) - df_eeg.theta_metrics.quantile([0.25])>0):
+            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+        else:
+            print("Try next song from the initially made playlist")
+
     elif option_b and option_t:
         st.write("Creating High Energy and Focussed Vibes")
-        # Sort by
+        if (df_eeg.beta_metrics.quantile([0.75]) - df_eeg.beta_metrics.quantile([0.25])>0) and (df_eeg.theta_metrics.quantile([0.75]) - df_eeg.theta_metrics.quantile([0.25])>0):
+            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+        else:
+            print("Try next song from the initially made playlist")
+
     elif option_a and option_b and option_t:
         st.write("Creating Mixed Playlist")
-        # Sort by
+        if (df_eeg.alpha_metrics.quantile([0.75]) - df_eeg.alpha_metrics.quantile([0.25])>0) and (df_eeg.beta_metrics.quantile([0.75]) - df_eeg.beta_metrics.quantile([0.25])>0) and (df_eeg.theta_metrics.quantile([0.75]) - df_eeg.theta_metrics.quantile([0.25])>0):
+            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+        else:
+            print("Try next song from the initially made playlist")
+    
     else:
         st.write("Creating Mixed Playlist")
         # No Sorting
