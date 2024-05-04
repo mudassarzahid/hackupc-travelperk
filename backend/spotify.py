@@ -7,8 +7,10 @@ LIMIT = 50
 class Spotify:
     API_URL = "https://api.spotify.com/v1"
 
-    def __init__(self, token):
+    def __init__(self, token=None):
         self.token = token
+        if not self.token:
+            self.token = open(".spotify_cached_token").read()
 
         self.headers = {
             "Accept": "application/json",

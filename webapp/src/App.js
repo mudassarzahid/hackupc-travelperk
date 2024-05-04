@@ -1,26 +1,6 @@
-import './App.css';
-import './Spinner.css';
-
-import React, {useEffect, useState} from "react";
-import {useNavigate} from 'react-router-dom';
+import React, {useEffect} from "react";
 
 const App = () => {
-  const navigate = useNavigate();
-  const [userData, setUserData] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [departureDate, setDepartureDate] = useState("2024-05-05");
-  const [returnDate, setReturnDate] = useState("2024-05-05");
-  const [travelBuddies, setTravelBuddies] = useState([]);
-  const url = (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') ? "http://localhost:3000" : "";
-
-  const handleStartDateChange = (event) => {
-    setDepartureDate(event.target.value);
-  }
-
-  const handleEndDateChange = (event) => {
-    setReturnDate(event.target.value);
-  }
-
   const getAccessToken = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const accessTokenParam = urlParams.get('access_token');
@@ -32,94 +12,32 @@ const App = () => {
     return accessTokenParam || accessTokenFragment;
   }
 
-  const findTravelBuddies = () => {
-    fetch(`${url}/api/findTravelBuddies/`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        "accessToken": getAccessToken(),
-        "spotifyUri": userData.spotifyUri,
-        "departureDate": departureDate,
-        "returnDate": returnDate,
-      })
-    }).then(res => res.json())
-      .then(matchesData => {
-        console.log(matchesData);
-        setIsLoading(false);
-        setTravelBuddies(matchesData);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-  }
-
   useEffect(() => {
-    setIsLoading(true);
-
-    fetch(`${url}/api/loadUserData/`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({"accessToken": getAccessToken()})
-    }).then(res => res.json())
-      .then(userData => {
-        console.log(userData);
-        setIsLoading(false);
-        setUserData(userData);
+    function sendToken() {
+      console.log("Make request");
+      fetch("http://localhost:3000/api/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "accessToken": getAccessToken()
+        })
       })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-  }, [navigate])
-
-
-  return (<div className="App">
-    {
-      isLoading ?
-        <div>Loading...</div> :
-        <div>
-          <div>{userData.displayName}</div>
-          <div className="mood-button">mood switch</div>
-          <div style={{display: "flex", justifyContent: "space-between"}}>
-            <div>
-              <div>
-                <input
-                  type="date"
-                  id="start"
-                  name="trip-start"
-                  value={departureDate}
-                  min="2024-05-05"
-                  onChange={handleStartDateChange}
-                />
-                <input
-                  type="date"
-                  id="end"
-                  name="trip-end"
-                  value={returnDate}
-                  min={departureDate}
-                  onChange={handleEndDateChange}
-                />
-              </div>
-              <div>
-                <div className="mood-button"
-                     onClick={() => findTravelBuddies()}>
-                  find travel buddies
-                </div>
-              </div>
-            </div>
-            <div><img src="https://r-graph-gallery.com/img/graph/143-spider-chart-with-saveral-individuals3.png"/></div>
-          </div>
-          <div>{travelBuddies.map(buddy => <div>
-            {buddy.toString()}
-          </div>)}</div>
-        </div>
+        .then(result => result.json())
+        .then(result => console.log(result))
     }
-  </div>);
+
+    sendToken()
+    const interval = setInterval(() => sendToken(), 100000)
+    return () => {
+      clearInterval(interval);
+    }
+  }, [])
+
+
+  return <></>
 }
 
 export default App;

@@ -1,3 +1,6 @@
+import os
+import urllib
+import uuid
 from http import HTTPStatus
 from typing import Any, Sequence
 
@@ -8,6 +11,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.responses import RedirectResponse
 
 from database import Database
 from datamodels import Query
@@ -26,8 +30,8 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
-    _: Request,
-    exc: RequestValidationError,
+        _: Request,
+        exc: RequestValidationError,
 ) -> JSONResponse:
     """Custom exception handler for handling FastAPI RequestValidationErrors.
 
@@ -57,6 +61,12 @@ async def validation_exception_handler(
             }
         ),
     )
+
+
+@app.post("/api/token/")
+def get_token(query: Query):
+    with open(".spotify_cached_token", "w") as f:
+        f.write(query.accessToken)
 
 
 @app.post("/api/loadUserData/")
@@ -132,18 +142,28 @@ def get_top(query: Query):
     matches_data = database.execute_query(matches_stmt)
     df_potential_matches = pd.DataFrame(matches_data)
     df_potential_matches["compatibility_score"] = (
-        (df_potential_matches["danceability"] - df_user["danceability"].values[0]) ** 2
-        + (df_potential_matches["energy"] - df_user["energy"].values[0]) ** 2
-        + (df_potential_matches["key"] - df_user["key"].values[0]) ** 2
-        + (df_potential_matches["loudness"] - df_user["loudness"].values[0]) ** 2
-        + (df_potential_matches["instrumentalness"] - df_user["instrumentalness"].values[0]) ** 2
-        + (df_potential_matches["liveness"] - df_user["liveness"].values[0]) ** 2
-        + (df_potential_matches["valence"] - df_user["valence"].values[0]) ** 2
-        + (df_potential_matches["tempo"] - df_user["tempo"].values[0]) ** 2
-        + (df_potential_matches["duration_ms"] - df_user["duration_ms"].values[0]) ** 2
-        + (df_potential_matches["time_signature"] - df_user["time_signature"].values[0])
-        ** 2
-    ) ** 0.5
+                                                          (df_potential_matches["danceability"] -
+                                                           df_user["danceability"].values[0]) ** 2
+                                                          + (df_potential_matches["energy"] - df_user["energy"].values[
+                                                      0]) ** 2
+                                                          + (df_potential_matches["key"] - df_user["key"].values[
+                                                      0]) ** 2
+                                                          + (df_potential_matches["loudness"] -
+                                                             df_user["loudness"].values[0]) ** 2
+                                                          + (df_potential_matches["instrumentalness"] -
+                                                             df_user["instrumentalness"].values[0]) ** 2
+                                                          + (df_potential_matches["liveness"] -
+                                                             df_user["liveness"].values[0]) ** 2
+                                                          + (df_potential_matches["valence"] -
+                                                             df_user["valence"].values[0]) ** 2
+                                                          + (df_potential_matches["tempo"] - df_user["tempo"].values[
+                                                      0]) ** 2
+                                                          + (df_potential_matches["duration_ms"] -
+                                                             df_user["duration_ms"].values[0]) ** 2
+                                                          + (df_potential_matches["time_signature"] -
+                                                             df_user["time_signature"].values[0])
+                                                          ** 2
+                                                  ) ** 0.5
 
     df_potential_matches = df_potential_matches.sort_values(by='compatibility_score')
     top_matches = df_potential_matches.head(3)

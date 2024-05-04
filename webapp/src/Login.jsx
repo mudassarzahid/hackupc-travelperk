@@ -4,7 +4,7 @@ import 'react-spotify-auth/dist/index.css';
 import React from "react";
 import {Scopes, SpotifyAuth} from 'react-spotify-auth';
 
-const url = (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') ? "http://localhost:3001" : "";
+const url = (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') ? "http://localhost:3002" : "";
 
 
 const Login = () => {
