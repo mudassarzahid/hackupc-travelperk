@@ -134,20 +134,20 @@ if __name__ == "__main__":
             alpha_metric = smooth_band_powers[Band.Alpha] / \
                 smooth_band_powers[Band.Delta]
             
-            print('Alpha Relaxation : ', alpha_metric)
+            print('Alpha Relaxation (Physically and Mentally Relaxed): ', alpha_metric)
             # Beta Protocol:
             # Beta waves have been used as a measure of mental activity and concentration
             # This beta over theta ratio is commonly used as neurofeedback for ADHD
             beta_metric = smooth_band_powers[Band.Beta] / \
                 smooth_band_powers[Band.Theta]
-            print('Beta Concentration: ', beta_metric)
+            print('Beta Concentration (Awake, alert consciousness, thinking, excitement): ', beta_metric)
 
             # Alpha/Theta Protocol:
             # This is another popular neurofeedback metric for stress reduction
             # Higher theta over alpha is supposedly associated with reduced anxiety
             theta_metric = smooth_band_powers[Band.Theta] / \
                 smooth_band_powers[Band.Alpha]
-            print('Theta Relaxation: ', theta_metric)
+            print('Theta Relaxation (Creativity, insight, deep focused states, reduced consciousness): ', theta_metric)
 
     except KeyboardInterrupt:
         print('Closing!')
