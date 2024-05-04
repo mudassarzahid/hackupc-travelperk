@@ -19,6 +19,7 @@ const Login = () => {
 
   return (
     <>
+      <div className="login-headline">Login</div>
       <div className="login-button">
         <SpotifyAuth
           redirectUri={redirectUri}

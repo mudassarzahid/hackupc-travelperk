@@ -8,10 +8,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from database import Database
 from datamodels import Query
 from spotify import Spotify
 
 app = FastAPI()
+database = Database()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,8 +25,8 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
-        _: Request,
-        exc: RequestValidationError,
+    _: Request,
+    exc: RequestValidationError,
 ) -> JSONResponse:
     """Custom exception handler for handling FastAPI RequestValidationErrors.
 
@@ -56,7 +58,7 @@ async def validation_exception_handler(
     )
 
 
-@app.post("/api/getTracks/")
+@app.post("/api/loadUserData/")
 def get_top(query: Query):
     spotify = Spotify(query.accessToken)
 
@@ -72,8 +74,64 @@ def get_top(query: Query):
 
     # Mean of audio features
     df = pd.DataFrame(audio_features["audio_features"])
-    selected_columns = ['danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness',
-                        'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'time_signature']
+    selected_columns = [
+        "danceability",
+        "energy",
+        "key",
+        "loudness",
+        "mode",
+        "speechiness",
+        "acousticness",
+        "instrumentalness",
+        "liveness",
+        "valence",
+        "tempo",
+        "duration_ms",
+        "time_signature",
+    ]
     means = df[selected_columns].mean()
+    cols = str(tuple(selected_columns)).replace("'", "")
+    insert_stmt = (
+        f"INSERT INTO user_data {cols} VALUES {tuple(means.to_dict().values())}"
+    )
+    # database.execute_query(insert_stmt)
 
-    return means.to_dict()
+    return spotify.get_user_data().json()["display_name"]
+
+
+@app.post("/api/findTravelBuddies/")
+def get_top(query: Query):
+    user_stmt = "SELECT * FROM user_data ORDER BY timestamp DESC LIMIT 1"
+    user_data = database.execute_query(user_stmt)
+    df_user = pd.DataFrame(user_data)
+    matches_stmt = f"""
+      SELECT *,
+      CASE
+          WHEN departure_date = '{query.departureDate}' AND return_date = '{query.returnDate}' THEN 'BOTH'
+          WHEN departure_date = '{query.departureDate}' THEN 'DEPARTURE'
+          WHEN return_date = '{query.returnDate}' THEN 'RETURN'
+          ELSE 'NONE'
+      END AS match_type
+      FROM dataset
+      WHERE departure_date = '{query.departureDate}'
+      OR return_date = '{query.returnDate}';
+    """
+    matches_data = database.execute_query(matches_stmt)
+    df_potential_matches = pd.DataFrame(matches_data)
+    df_potential_matches["compatibility_score"] = (
+        (df_potential_matches["danceability"] - df_user["danceability"].values[0]) ** 2
+        + (df_potential_matches["energy"] - df_user["energy"].values[0]) ** 2
+        + (df_potential_matches["key"] - df_user["key"].values[0]) ** 2
+        + (df_potential_matches["loudness"] - df_user["loudness"].values[0]) ** 2
+        + (df_potential_matches["instrumentalness"] - df_user["instrumentalness"].values[0]) ** 2
+        + (df_potential_matches["liveness"] - df_user["liveness"].values[0]) ** 2
+        + (df_potential_matches["valence"] - df_user["valence"].values[0]) ** 2
+        + (df_potential_matches["tempo"] - df_user["tempo"].values[0]) ** 2
+        + (df_potential_matches["duration_ms"] - df_user["duration_ms"].values[0]) ** 2
+        + (df_potential_matches["time_signature"] - df_user["time_signature"].values[0])
+        ** 2
+    ) ** 0.5
+
+    df_potential_matches = df_potential_matches.sort_values(by='compatibility_score')
+    top_matches = df_potential_matches.head(2)
+    return top_matches.to_dict(orient='records')

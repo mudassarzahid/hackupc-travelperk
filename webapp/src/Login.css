@@ -17,6 +17,10 @@
     top: 1px;
 }
 
+.login-button {
+    text-align: -webkit-center;
+}
+
 .login-headline {
     font-size: 32px;
     font-weight: bold;
