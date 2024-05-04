@@ -26,6 +26,15 @@ class Spotify:
 
         return response
 
+    def get_recent_tracks(self) -> Response:
+        response = requests.get(
+            self.API_URL + "/me/player/recently-played",
+            headers=self.headers,
+            params={"limit": 20}
+        )
+
+        return response
+
     def get_user_data(self):
         response = requests.get(
             self.API_URL + "/me",

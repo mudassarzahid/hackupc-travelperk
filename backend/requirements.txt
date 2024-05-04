@@ -3,3 +3,5 @@ uvicorn
 muselsl
 sqlalchemy
 psycopg2
+spotipy
+streamlit

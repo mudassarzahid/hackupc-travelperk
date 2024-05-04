@@ -1,21 +1,13 @@
-import io
 import os
 
 import spotipy
 import streamlit as st
-import time
-import numpy as np
-import datetime
-
 from spotipy import SpotifyOAuth
-
-import neurofeedback
-import pandas as pd
 
 os.environ["SPOTIPY_CLIENT_ID"] = '2f817bc820e7470dba54223f96f4d945'
 os.environ["SPOTIPY_CLIENT_SECRET"] = '8cbb7a3351b74d7cacec0838d768a5ae'
 os.environ["SPOTIPY_REDIRECT_URI"] = 'http://localhost:3001/app'
-scope = "user-library-read" #streaming user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private user-read-recently-played user-read-private"
+scope = "user-read-recently-played"
 
 st.set_page_config(page_title="Mood Switch", page_icon="📈")
 
