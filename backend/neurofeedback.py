@@ -48,7 +48,7 @@ SHIFT_LENGTH = EPOCH_LENGTH - OVERLAP_LENGTH
 # 0 = left ear, 1 = left forehead, 2 = right forehead, 3 = right ear
 INDEX_CHANNEL = [0]
 
-if __name__ == "__main__":
+def neurofeedback_fn():
 
     """ 1. CONNECT TO EEG STREAM """
 
