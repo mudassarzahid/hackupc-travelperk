@@ -31,7 +31,10 @@ option_t = st.checkbox('Self Exploration and Intellectual')
 
 placeholder = st.empty()
 st.divider()
-if st.button("Start Playing Vibey Music"):
+
+col1, col2 = st.columns(2)
+
+if col1.button("Start Playing Vibey Music"):
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 
     results = sp.current_user_recently_played()
@@ -39,7 +42,7 @@ if st.button("Start Playing Vibey Music"):
         track = item['track']
         print(idx, track['artists'][0]['name'], " – ", track['name'])
     # Import user's playlist (Last 100 songs played)
-    # df = pd.read_csv("")
+    #df = pd.read_csv("")
 
     # Play last played song and record signals
     st.write("Playing ...")
@@ -102,6 +105,6 @@ if st.button("Start Playing Vibey Music"):
         st.write("Creating Mixed Playlist")
         # No Sorting
     '''
-elif st.button("Stop"):
+if col2.button("Stop"):
     #This would empty everything inside the container
     placeholder.empty()
