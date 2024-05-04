@@ -158,6 +158,7 @@ def neurofeedback_fn():
 
             if time_2 == 90:
                 df_eeg.to_csv('test_'+str(i)+'.csv', index=False)
+                print("Adjusting Neurofeedback Loop...")
                 time_1 = datetime.now()       
                 i = i+1
                 return df_eeg
