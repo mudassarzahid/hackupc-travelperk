@@ -26,6 +26,7 @@ if st.button("Start Playing Vybey Music"):
     
     #Play last played song and record signals
     st.write("Playing ...")
+    #Spotify line
     st.write("Your brainwaves...")
     #time.sleep(10)
     #neurofeedback.neurofeedback_fn()
