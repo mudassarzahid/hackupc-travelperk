@@ -29,6 +29,7 @@ option_a = st.checkbox('Calm and Relaxing')
 option_b = st.checkbox('High Energy & Adventurous')
 option_t = st.checkbox('Self Exploration and Intellectual')
 
+placeholder = st.empty()
 st.divider()
 if st.button("Start Playing Vibey Music"):
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
@@ -44,7 +45,8 @@ if st.button("Start Playing Vibey Music"):
     st.write("Playing ...")
     #Spotify line
     st.write("Your brainwaves...")
-    # time.sleep(10)
+    
+    '''
     df_eeg = neurofeedback.neurofeedback_fn()
 
     if option_a is True and option_t is False and option_b is False:
@@ -99,3 +101,7 @@ if st.button("Start Playing Vibey Music"):
     else:
         st.write("Creating Mixed Playlist")
         # No Sorting
+    '''
+elif st.button("Stop"):
+    #This would empty everything inside the container
+    placeholder.empty()
