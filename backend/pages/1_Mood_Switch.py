@@ -1,13 +1,9 @@
 import os
 
-import spotipy
+import pandas as pd
 import streamlit as st
-from spotipy import SpotifyOAuth
 
-os.environ["SPOTIPY_CLIENT_ID"] = '2f817bc820e7470dba54223f96f4d945'
-os.environ["SPOTIPY_CLIENT_SECRET"] = '8cbb7a3351b74d7cacec0838d768a5ae'
-os.environ["SPOTIPY_REDIRECT_URI"] = 'http://localhost:3001/app'
-scope = "user-read-recently-played"
+from spotify import Spotify
 
 st.set_page_config(page_title="Mood Switch", page_icon="📈")
 
@@ -17,9 +13,9 @@ st.write("""Here you can set the vibe of your travel plans""")
 
 st.divider()
 st.write("What type of Vibe would you like your trip to be?")
-option_a = st.checkbox('Calm and Relaxing')
-option_b = st.checkbox('High Energy & Adventurous')
-option_t = st.checkbox('Self Exploration and Intellectual')
+option_a = st.checkbox("Calm and Relaxing")
+option_b = st.checkbox("High Energy & Adventurous")
+option_t = st.checkbox("Self Exploration and Intellectual")
 
 placeholder = st.empty()
 st.divider()
@@ -27,21 +23,50 @@ st.divider()
 col1, col2 = st.columns(2)
 
 if col1.button("Start Playing Vibey Music"):
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
+    spotify = Spotify()
+    recent_tracks = spotify.get_saved_tracks()
 
-    results = sp.current_user_recently_played()
-    for idx, item in enumerate(results['items']):
-        track = item['track']
-        print(idx, track['artists'][0]['name'], " – ", track['name'])
+    song_names, song_artists, ids = [], [], []
+    for item in recent_tracks.json()["items"]:
+        ids.append(item["track"]["id"])
+        song_names.append(item["track"]["name"])
+        song_artists.append([artist["name"] for artist in item["track"]["artists"]])
+
+    audio_features = spotify.get_audio_features(",".join(ids)).json()
+
     # Import user's playlist (Last 100 songs played)
-    #df = pd.read_csv("")
+    df_features = pd.DataFrame(audio_features["audio_features"])
+    df_artists = pd.DataFrame({"artists": song_artists})
+    df_song_names = pd.DataFrame({"tracks": song_names})
+    df_final = pd.concat([df_artists, df_song_names, df_features], axis=1)
 
+    df_final["danceability_var"] = (0.5 - df_final["danceability"]) ** 2
+    df_final["energy_var"] = (0.5 - df_final["energy"]) ** 2
+    df_final["speechiness_var"] = (0.5 - df_final["speechiness"]) ** 2
+    df_final["acousticness_var"] = (0.5 - df_final["acousticness"]) ** 2
+    df_final["instrumentalness_var"] = (0.5 - df_final["instrumentalness"]) ** 2
+    df_final["liveness_var"] = (0.5 - df_final["liveness"]) ** 2
+    df_final["valence_var"] = (0.5 - df_final["valence"]) ** 2
+
+    df_final = df_final.sort_values(
+        [
+            "danceability_var",
+            "energy_var",
+            "speechiness_var",
+            "acousticness_var",
+            "instrumentalness_var",
+            "liveness_var",
+            "valence_var",
+        ],
+        ascending=[True, True, True, True, True, True, True],
+    )
+    print(df_final.head())
     # Play last played song and record signals
     st.write("Playing ...")
-    #Spotify line
+    # Spotify line
     st.write("Your brainwaves...")
-    
-    '''
+    # TODO
+    """
     df_eeg = neurofeedback.neurofeedback_fn()
 
     if option_a is True and option_t is False and option_b is False:
@@ -96,7 +121,7 @@ if col1.button("Start Playing Vibey Music"):
     else:
         st.write("Creating Mixed Playlist")
         # No Sorting
-    '''
+    """
 if col2.button("Stop"):
-    #This would empty everything inside the container
+    # This would empty everything inside the container
     placeholder.empty()

@@ -30,7 +30,7 @@ class Spotify:
         response = requests.get(
             self.API_URL + "/me/player/recently-played",
             headers=self.headers,
-            params={"limit": 20}
+            params={"limit": 10},
         )
 
         return response

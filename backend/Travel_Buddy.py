@@ -13,15 +13,6 @@ st.set_page_config(page_title="Travel Buddy Matching", page_icon="🌍")
 st.sidebar.header("Travel Buddy Matching")
 st.markdown("# Travel Buddy Matching")
 st.write("""Here you can find travel buddies that match your vibe!""")
-st.divider()
-
-# User inputs
-date_input = st.date_input(
-    "Select days planned for travel",
-    value=[datetime.date(2024, 5, 5), datetime.date(2024, 5, 5)],
-    min_value=datetime.date.today(),
-)
-
 spotify = Spotify()
 recent_tracks = spotify.get_recent_tracks()
 ids = []
@@ -59,9 +50,24 @@ insert_stmt = (
     f"{', '.join([f'{col}=EXCLUDED.{col}' for col in selected_columns])} RETURNING 1;"
 )
 database.execute_query(insert_stmt)
-
-spotifyUri = user_data["uri"],
+spotifyUri = (user_data["uri"],)
 displayName = user_data["display_name"]
+st.divider()
+col1, col2 = st.columns([1, 2])
+col1.header(displayName)
+col2.markdown(
+    """<iframe src="http://localhost:2999/d-solo/edkq6gqgcnjswe/hackupc?orgId=1&from=1714835344593&to=1714856944593&panelId=1" width="450" height="200" frameborder="0"></iframe>""",
+    unsafe_allow_html=True,
+)
+st.divider()
+
+# User inputs
+date_input = st.date_input(
+    "Select days planned for travel",
+    value=[datetime.date(2024, 5, 5), datetime.date(2024, 5, 5)],
+    min_value=datetime.date.today(),
+)
+
 st.divider()
 
 if st.button("Search Travel Vibe Matching Buddies"):
@@ -88,36 +94,49 @@ if st.button("Search Travel Vibe Matching Buddies"):
     matches_data = database.execute_query(matches_stmt)
     df_potential_matches = pd.DataFrame(matches_data)
     df_potential_matches["compatibility_score"] = (
-                                                          (df_potential_matches["danceability"] -
-                                                           df_user["danceability"].values[0]) ** 2
-                                                          + (df_potential_matches["energy"] - df_user["energy"].values[
-                                                      0]) ** 2
-                                                          + (df_potential_matches["key"] - df_user["key"].values[
-                                                      0]) ** 2
-                                                          + (df_potential_matches["loudness"] -
-                                                             df_user["loudness"].values[0]) ** 2
-                                                          + (df_potential_matches["instrumentalness"] -
-                                                             df_user["instrumentalness"].values[0]) ** 2
-                                                          + (df_potential_matches["liveness"] -
-                                                             df_user["liveness"].values[0]) ** 2
-                                                          + (df_potential_matches["valence"] -
-                                                             df_user["valence"].values[0]) ** 2
-                                                          + (df_potential_matches["tempo"] - df_user["tempo"].values[
-                                                      0]) ** 2
-                                                          + (df_potential_matches["duration_ms"] -
-                                                             df_user["duration_ms"].values[0]) ** 2
-                                                          + (df_potential_matches["time_signature"] -
-                                                             df_user["time_signature"].values[0])
-                                                          ** 2
-                                                  ) ** 0.5
+        (df_potential_matches["danceability"] - df_user["danceability"].values[0]) ** 2
+        + (df_potential_matches["energy"] - df_user["energy"].values[0]) ** 2
+        + (df_potential_matches["danceability"] - df_user["acousticness"].values[0])
+        ** 2
+        + (df_potential_matches["danceability"] - df_user["speechiness"].values[0]) ** 2
+        + (
+            df_potential_matches["instrumentalness"]
+            - df_user["instrumentalness"].values[0]
+        )
+        ** 2
+        + (df_potential_matches["liveness"] - df_user["liveness"].values[0]) ** 2
+        + (df_potential_matches["valence"] - df_user["valence"].values[0]) ** 2
+    ) ** 0.5
 
-    df_potential_matches = df_potential_matches.sort_values(by='compatibility_score')
+    df_potential_matches = df_potential_matches.sort_values(by="compatibility_score")
     top_matches = df_potential_matches.head(3)
-    data_to_insert = top_matches.to_dict(orient='records')
+    data_to_insert = top_matches.to_dict(orient="records")
 
     insert_query = """
-            INSERT INTO current_matches (trip_id, traveller_name, departure_city, arrival_city, return_date, departure_date, trip_length, acousticness, danceability, duration_ms, energy, instrumentalness, liveness, loudness, mode, speechiness, tempo, valence, time_signature, key, match_type, compatibility_score)
-            VALUES (:trip_id, :traveller_name, :departure_city, :arrival_city, :return_date,:departure_date,:trip_length, :acousticness, :danceability, :duration_ms, :energy, :instrumentalness , :liveness , :loudness, :mode, :speechiness, :tempo, :valence, :time_signature, :key, :match_type, :compatibility_score);
-        """
+        INSERT INTO current_matches (trip_id, traveller_name, departure_city, arrival_city, return_date, departure_date, trip_length, acousticness, danceability, duration_ms, energy, instrumentalness, liveness, loudness, mode, speechiness, tempo, valence, time_signature, key, match_type, compatibility_score)
+        VALUES (:trip_id, :traveller_name, :departure_city, :arrival_city, :return_date,:departure_date,:trip_length, :acousticness, :danceability, :duration_ms, :energy, :instrumentalness , :liveness , :loudness, :mode, :speechiness, :tempo, :valence, :time_signature, :key, :match_type, :compatibility_score);
+    """
 
     database.execute_dml_query(insert_query, params=data_to_insert)
+
+    if len(top_matches) > 0:
+        st.subheader(top_matches.iloc[0, 1])
+        st.write(top_matches.iloc[0, 20])
+        st.markdown(
+            """<iframe src="http://localhost:2999/d-solo/edkq6gqgcnjswe/hackupc?orgId=1&from=1714837989251&to=1714859589252&panelId=2" width="450" height="200" frameborder="0"></iframe>""",
+            unsafe_allow_html=True,
+        )
+    if len(top_matches) > 1:
+        st.subheader(top_matches.iloc[1, 1])
+        st.write(top_matches.iloc[1, 20])
+        st.markdown(
+            """<iframe src="http://localhost:2999/d-solo/edkq6gqgcnjswe/hackupc?orgId=1&from=1714838067234&to=1714859667234&panelId=3" width="450" height="200" frameborder="0"></iframe>""",
+            unsafe_allow_html=True,
+        )
+    if len(top_matches) > 2:
+        st.subheader(top_matches.iloc[2, 1])
+        st.write(top_matches.iloc[2, 20])
+        st.markdown(
+            """<iframe src="http://localhost:2999/d-solo/edkq6gqgcnjswe/hackupc?orgId=1&from=1714838096116&to=1714859696116&panelId=4" width="450" height="200" frameborder="0"></iframe>""",
+            unsafe_allow_html=True,
+        )

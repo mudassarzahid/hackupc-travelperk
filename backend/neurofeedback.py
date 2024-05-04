@@ -13,12 +13,14 @@ The neurofeedback protocols described here are inspired by
 Adapted from https://github.com/NeuroTechX/bci-workshop
 """
 
-import numpy as np  # Module that simplifies computations on matrices
-import matplotlib.pyplot as plt  # Module used for plotting
-from pylsl import StreamInlet, resolve_byprop  # Module to receive EEG data
-import utils  # Our own utility functions
-import pandas as pd
 from datetime import datetime
+
+import matplotlib.pyplot as plt  # Module used for plotting
+import numpy as np  # Module that simplifies computations on matrices
+import pandas as pd
+from pylsl import StreamInlet, resolve_byprop  # Module to receive EEG data
+
+import utils  # Our own utility functions
 
 # Handy little enum to make code more readable
 
@@ -50,15 +52,15 @@ SHIFT_LENGTH = EPOCH_LENGTH - OVERLAP_LENGTH
 # 0 = left ear, 1 = left forehead, 2 = right forehead, 3 = right ear
 INDEX_CHANNEL = [0]
 
-def neurofeedback_fn():
 
-    """ 1. CONNECT TO EEG STREAM """
+def neurofeedback_fn():
+    """1. CONNECT TO EEG STREAM"""
 
     # Search for active LSL streams
-    print('Looking for an EEG stream...')
-    streams = resolve_byprop('type', 'EEG', timeout=2)
+    print("Looking for an EEG stream...")
+    streams = resolve_byprop("type", "EEG", timeout=2)
     if len(streams) == 0:
-        raise RuntimeError('Can\'t find EEG stream.')
+        raise RuntimeError("Can't find EEG stream.")
 
     # Set active EEG stream to inlet and apply time correction
     print("Start acquiring data")
@@ -82,8 +84,7 @@ def neurofeedback_fn():
     filter_state = None  # for use with the notch filter
 
     # Compute the number of epochs in "buffer_length"
-    n_win_test = int(np.floor((BUFFER_LENGTH - EPOCH_LENGTH) /
-                              SHIFT_LENGTH + 1))
+    n_win_test = int(np.floor((BUFFER_LENGTH - EPOCH_LENGTH) / SHIFT_LENGTH + 1))
 
     # Initialize the band power buffer (for plotting)
     # bands will be ordered: [delta, theta, alpha, beta]
@@ -93,76 +94,90 @@ def neurofeedback_fn():
 
     # The try/except structure allows to quit the while loop by aborting the
     # script with <Ctrl-C>
-    print('Press Ctrl-C in the console to break the while loop.')
+    print("Press Ctrl-C in the console to break the while loop.")
 
     try:
-        df_eeg = pd.Dataframe(columns = ['datetime','alpha','beta','theta'])
-        time_1 = datetime.now()        
+        df_eeg = pd.Dataframe(columns=["datetime", "alpha", "beta", "theta"])
+        time_1 = datetime.now()
         i = 0
         # The following loop acquires data, computes band powers, and calculates neurofeedback metrics based on those band powers
-        while True: #Need to change it with time based loop
-            """ 3.1 ACQUIRE DATA """
+        while True:  # Need to change it with time based loop
+            """3.1 ACQUIRE DATA"""
             # Obtain EEG data from the LSL stream
             eeg_data, timestamp = inlet.pull_chunk(
-                timeout=1, max_samples=int(SHIFT_LENGTH * fs))
+                timeout=1, max_samples=int(SHIFT_LENGTH * fs)
+            )
 
             # Only keep the channel we're interested in
             ch_data = np.array(eeg_data)[:, INDEX_CHANNEL]
 
             # Update EEG buffer with the new data
             eeg_buffer, filter_state = utils.update_buffer(
-                eeg_buffer, ch_data, notch=True,
-                filter_state=filter_state)
+                eeg_buffer, ch_data, notch=True, filter_state=filter_state
+            )
 
             """ 3.2 COMPUTE BAND POWERS """
             # Get newest samples from the buffer
-            data_epoch = utils.get_last_data(eeg_buffer,
-                                             EPOCH_LENGTH * fs)
+            data_epoch = utils.get_last_data(eeg_buffer, EPOCH_LENGTH * fs)
 
             # Compute band powers
             band_powers = utils.compute_band_powers(data_epoch, fs)
-            band_buffer, _ = utils.update_buffer(band_buffer,
-                                                 np.asarray([band_powers]))
+            band_buffer, _ = utils.update_buffer(band_buffer, np.asarray([band_powers]))
             # Compute the average band powers for all epochs in buffer
             # This helps to smooth out noise
             smooth_band_powers = np.mean(band_buffer, axis=0)
 
-            print('Delta: ', band_powers[Band.Delta], ' Theta: ', band_powers[Band.Theta],
-                   ' Alpha: ', band_powers[Band.Alpha], ' Beta: ', band_powers[Band.Beta])
+            print(
+                "Delta: ",
+                band_powers[Band.Delta],
+                " Theta: ",
+                band_powers[Band.Theta],
+                " Alpha: ",
+                band_powers[Band.Alpha],
+                " Beta: ",
+                band_powers[Band.Beta],
+            )
 
             """ 3.3 COMPUTE NEUROFEEDBACK METRICS """
             # These metrics could also be used to drive brain-computer interfaces
 
             # Alpha Protocol:
             # Simple redout of alpha power, divided by delta waves in order to rule out noise
-            alpha_metric = smooth_band_powers[Band.Alpha] / \
-                smooth_band_powers[Band.Delta]
-            
-            print('Alpha Relaxation (Physically and Mentally Relaxed): ', alpha_metric)
+            alpha_metric = (
+                smooth_band_powers[Band.Alpha] / smooth_band_powers[Band.Delta]
+            )
+
+            print("Alpha Relaxation (Physically and Mentally Relaxed): ", alpha_metric)
             # Beta Protocol:
             # Beta waves have been used as a measure of mental activity and concentration
             # This beta over theta ratio is commonly used as neurofeedback for ADHD
-            beta_metric = smooth_band_powers[Band.Beta] / \
-                smooth_band_powers[Band.Theta]
-            print('Beta Concentration (Awake, alert consciousness, thinking, excitement): ', beta_metric)
+            beta_metric = smooth_band_powers[Band.Beta] / smooth_band_powers[Band.Theta]
+            print(
+                "Beta Concentration (Awake, alert consciousness, thinking, excitement): ",
+                beta_metric,
+            )
 
             # Alpha/Theta Protocol:
             # This is another popular neurofeedback metric for stress reduction
             # Higher theta over alpha is supposedly associated with reduced anxiety
-            theta_metric = smooth_band_powers[Band.Theta] / \
-                smooth_band_powers[Band.Alpha]
-            print('Theta Relaxation (Creativity, insight, deep focused states, reduced consciousness): ', theta_metric)
+            theta_metric = (
+                smooth_band_powers[Band.Theta] / smooth_band_powers[Band.Alpha]
+            )
+            print(
+                "Theta Relaxation (Creativity, insight, deep focused states, reduced consciousness): ",
+                theta_metric,
+            )
 
-            time_2 = datetime.now()-time_1
+            time_2 = datetime.now() - time_1
             df_eeg.append([time_2, alpha_metric, beta_metric, theta_metric])
 
             if time_2 == 90:
-                df_eeg.to_csv('test_'+str(i)+'.csv', index=False)
+                df_eeg.to_csv("test_" + str(i) + ".csv", index=False)
                 print("Adjusting Neurofeedback Loop...")
-                time_1 = datetime.now()       
-                i = i+1
+                time_1 = datetime.now()
+                i = i + 1
                 return df_eeg
-                df_eeg = pd.Dataframe(columns = ['datetime','alpha','beta','theta'])
-                
+                df_eeg = pd.Dataframe(columns=["datetime", "alpha", "beta", "theta"])
+
     except KeyboardInterrupt:
-        print('Closing!')
+        print("Closing!")

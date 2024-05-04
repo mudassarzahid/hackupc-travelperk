@@ -23,8 +23,8 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
-        _: Request,
-        exc: RequestValidationError,
+    _: Request,
+    exc: RequestValidationError,
 ) -> JSONResponse:
     """Custom exception handler for handling FastAPI RequestValidationErrors.
 
