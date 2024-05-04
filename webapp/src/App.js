@@ -39,12 +39,17 @@ const App = () => {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({"accessToken": getAccessToken()})
+      body: JSON.stringify({
+        "accessToken": getAccessToken(),
+        "spotifyUri": userData.spotifyUri,
+        "departureDate": departureDate,
+        "returnDate": returnDate,
+      })
     }).then(res => res.json())
-      .then(userData => {
-        console.log(userData);
+      .then(matchesData => {
+        console.log(matchesData);
         setIsLoading(false);
-        setUserData(userData);
+        setTravelBuddies(matchesData);
       })
       .catch(error => {
         console.error('Error fetching data:', error);
@@ -78,8 +83,8 @@ const App = () => {
       isLoading ?
         <div>Loading...</div> :
         <div>
-          <div>{userData.toString()}</div>
-          <div className="mood-button">moodchanger</div>
+          <div>{userData.displayName}</div>
+          <div className="mood-button">mood switch</div>
           <div style={{display: "flex", justifyContent: "space-between"}}>
             <div>
               <div>
@@ -109,6 +114,9 @@ const App = () => {
             </div>
             <div><img src="https://r-graph-gallery.com/img/graph/143-spider-chart-with-saveral-individuals3.png"/></div>
           </div>
+          <div>{travelBuddies.map(buddy => <div>
+            {buddy.toString()}
+          </div>)}</div>
         </div>
     }
   </div>);
