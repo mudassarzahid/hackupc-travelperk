@@ -14,10 +14,23 @@ class Database:
         )
         self.engine = create_engine(connection_string)
 
-    def execute_query(self, query):
+    def execute_query(self, query, params=None):
         with self.engine.connect() as connection:
-            res = connection.execute(text(query))
+            if params:
+                res = connection.execute(text(query), parameters=params)
+            else:
+                res = connection.execute(text(query))
             result_dicts = [row._asdict() for row in res.fetchall()]
             connection.commit()
 
             return result_dicts
+
+    def execute_dml_query(self, query, params=None):
+        with self.engine.connect() as connection:
+            if params:
+                connection.execute(text(query), parameters=params)
+            else:
+                connection.execute(text(query))
+            connection.commit()
+
+            return None

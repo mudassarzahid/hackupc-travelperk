@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Any, Sequence
 
 import pandas as pd
+import psycopg2
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -71,6 +72,7 @@ def get_top(query: Query):
 
     # Get audio features
     audio_features = spotify.get_audio_features(",".join(ids)).json()
+    user_data = spotify.get_user_data().json()
 
     # Mean of audio features
     df = pd.DataFrame(audio_features["audio_features"])
@@ -90,20 +92,31 @@ def get_top(query: Query):
         "time_signature",
     ]
     means = df[selected_columns].mean()
-    cols = str(tuple(selected_columns)).replace("'", "")
-    insert_stmt = (
-        f"INSERT INTO user_data {cols} VALUES {tuple(means.to_dict().values())}"
-    )
-    # database.execute_query(insert_stmt)
+    cols = str(tuple(["spotify_uri"] + selected_columns)).replace("'", "")
+    row = [user_data["uri"]] + list(means.to_dict().values())
 
-    return spotify.get_user_data().json()["display_name"]
+    insert_stmt = (
+        f"INSERT INTO user_data {cols} VALUES {tuple(row)} "
+        f"ON CONFLICT (spotify_uri) DO UPDATE SET "
+        f"{', '.join([f'{col}=EXCLUDED.{col}' for col in selected_columns])} RETURNING 1;"
+    )
+    database.execute_query(insert_stmt)
+
+    return {
+        "spotifyUri": user_data["uri"],
+        "displayName": user_data["display_name"]
+    }
 
 
 @app.post("/api/findTravelBuddies/")
 def get_top(query: Query):
-    user_stmt = "SELECT * FROM user_data ORDER BY timestamp DESC LIMIT 1"
+    truncate_stmt = "TRUNCATE current_matches;"
+    database.execute_dml_query(truncate_stmt)
+
+    user_stmt = f"SELECT * FROM user_data WHERE spotify_uri = '{query.spotifyUri}';"
     user_data = database.execute_query(user_stmt)
     df_user = pd.DataFrame(user_data)
+
     matches_stmt = f"""
       SELECT *,
       CASE
@@ -133,5 +146,12 @@ def get_top(query: Query):
     ) ** 0.5
 
     df_potential_matches = df_potential_matches.sort_values(by='compatibility_score')
-    top_matches = df_potential_matches.head(2)
-    return top_matches.to_dict(orient='records')
+    top_matches = df_potential_matches.head(3)
+    data_to_insert = top_matches.to_dict(orient='records')
+
+    insert_query = """
+        INSERT INTO current_matches (trip_id, traveller_name, departure_city, arrival_city, return_date, departure_date, trip_length, acousticness, danceability, duration_ms, energy, instrumentalness, liveness, loudness, mode, speechiness, tempo, valence, time_signature, key, match_type, compatibility_score)
+        VALUES (:trip_id, :traveller_name, :departure_city, :arrival_city, :return_date,:departure_date,:trip_length, :acousticness, :danceability, :duration_ms, :energy, :instrumentalness , :liveness , :loudness, :mode, :speechiness, :tempo, :valence, :time_signature, :key, :match_type, :compatibility_score);
+    """
+
+    database.execute_dml_query(insert_query, params=data_to_insert)
