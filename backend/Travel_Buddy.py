@@ -12,10 +12,11 @@ st.markdown("# Travel Buddy Matching")
 st.write(
     """Here you can find travel buddies that match your vibe!"""
 )
+st.divider()
 
 # User inputs
 date_input = st.date_input(
-    "Select day",
+    "Select days planned for travel",
     value=[datetime.date(2024, 5, 5), datetime.date(2024, 5, 5)],
     min_value=datetime.date.today(),
 )
@@ -23,6 +24,7 @@ date_input = st.date_input(
 
 #Get user's spotify profile
 #df_user = pd._read_csv('')
+st.divider()
 
 if st.button("Search Travel Vibe Matching Buddies"):
     #Get database of user's spotify profile
