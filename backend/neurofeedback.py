@@ -14,7 +14,7 @@ Adapted from https://github.com/NeuroTechX/bci-workshop
 """
 
 from datetime import datetime
-
+import json
 import matplotlib.pyplot as plt  # Module used for plotting
 import numpy as np  # Module that simplifies computations on matrices
 import pandas as pd
@@ -96,10 +96,12 @@ def neurofeedback_fn():
     # script with <Ctrl-C>
     print("Press Ctrl-C in the console to break the while loop.")
 
+    df_eeg = pd.DataFrame()
+
     try:
-        df_eeg = pd.Dataframe(columns=["datetime", "alpha", "beta", "theta"])
         time_1 = datetime.now()
         i = 0
+        j = 0
         # The following loop acquires data, computes band powers, and calculates neurofeedback metrics based on those band powers
         while True:  # Need to change it with time based loop
             """3.1 ACQUIRE DATA"""
@@ -169,15 +171,25 @@ def neurofeedback_fn():
             )
 
             time_2 = datetime.now() - time_1
-            df_eeg.append([time_2, alpha_metric, beta_metric, theta_metric])
 
-            if time_2 == 90:
+            print((time_2).total_seconds())
+            df_eeg.loc[j, 0] = time_2.total_seconds()
+            df_eeg.loc[j, 1] = alpha_metric
+            df_eeg.loc[j, 2] = beta_metric
+            df_eeg.loc[j, 3] = theta_metric
+
+            yield alpha_metric, beta_metric, theta_metric
+
+            j = j + 1
+            # df_eeg.append({'timestamp': time_2, 'Alpha': alpha_metric,
+            #               'Beta' : beta_metric,'Theta' : theta_metric})
+            if (time_2.total_seconds()) > 10:
                 df_eeg.to_csv("test_" + str(i) + ".csv", index=False)
                 print("Adjusting Neurofeedback Loop...")
                 time_1 = datetime.now()
                 i = i + 1
-                return df_eeg
                 df_eeg = pd.Dataframe(columns=["datetime", "alpha", "beta", "theta"])
+                yield df_eeg
 
     except KeyboardInterrupt:
         print("Closing!")

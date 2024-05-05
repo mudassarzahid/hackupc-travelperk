@@ -1,5 +1,5 @@
-import os
-import time
+import asyncio
+import json
 
 import numpy as np
 import pandas as pd
@@ -24,6 +24,8 @@ placeholder = st.empty()
 st.divider()
 
 col1, col2 = st.columns(2)
+df_eeg = pd.DataFrame(columns=["alpha_metric", "beta_metric", "theta_metric"])
+
 
 
 def get_df(feedback_type, merged_df):
@@ -77,6 +79,7 @@ def get_df(feedback_type, merged_df):
 
     return merged_df
 
+
 def create_new_queue(tracks):
     song_names, song_artists, ids = [], [], []
     for item in tracks:
@@ -102,6 +105,10 @@ if col1.button("Start Playing Vibey Music"):
     recent_tracks = spotify.get_saved_tracks()
     df_final = create_new_queue(recent_tracks.json()["items"])
 
+    status_text = st.sidebar.empty()
+    last_rows = np.random.randn(1, 3)
+    chart = st.line_chart(last_rows)
+
     if option_a is True and option_t is False and option_b is False:
         st.write("Creating Calm and Relaxing Vibes")
         df_after = get_df("calm and relaxing", df_final)
@@ -111,24 +118,33 @@ if col1.button("Start Playing Vibey Music"):
 
         # QUEUE
         while True:
-            df_eeg = next(neurofeedback.neurofeedback_fn())
-            if np.percentile(df_eeg[1], 75) - np.percentile(df_eeg[1], 25) > 0:
-                recommendations = spotify.get_recommendations(
-                    {"seed_tracks": df_after.iloc[0, 14]}
-                )
-                df_after = create_new_queue(recommendations.json()["tracks"])
-                df_after = df_after.iloc[1:]
-                st.table(df_after[["tracks", "artists"]].head(2))
+            alpha_metric, beta_metric, theta_metric = next(neurofeedback.neurofeedback_fn())
+            new_rows = np.array([[alpha_metric, beta_metric, theta_metric]])
+            chart.add_rows(new_rows)
+            df_eeg = pd.concat([df_eeg, pd.DataFrame([{
+                "alpha_metric": alpha_metric,
+                "beta_metric": beta_metric,
+                "theta_metric": theta_metric
+            }])], ignore_index=True)
 
-                spotify.add_to_queue({"uri": recommendations.json()['tracks'][1]['uri']})
-                print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
-                print("You are more relaxed")
-            elif np.percentile(df_eeg[1], 75) - np.percentile(df_eeg[1], 25) < 0:
-                # Get next song in queue
-                df_after = df_after.iloc[1:]
-                st.table(df_after[["tracks", "artists"]].head(2))
-                print("Try next song from the initially made playlist")
-                print("Checking for neurofeedback with other songs for alpha waves")
+            if len(df_eeg) % 10 == 0:
+                if np.percentile(df_eeg["alpha_metric"], 75) - np.percentile(df_eeg["alpha_metric"], 25) > 0:
+                    recommendations = spotify.get_recommendations(
+                        {"seed_tracks": df_after.iloc[0, 14]}
+                    )
+                    df_after = create_new_queue(recommendations.json()["tracks"])
+                    df_after = df_after.iloc[1:]
+                    st.table(df_after[["tracks", "artists"]].head(2))
+
+                    spotify.add_to_queue({"uri": recommendations.json()['tracks'][1]['uri']})
+                    print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+                    print("You are more relaxed")
+                elif np.percentile(df_eeg["alpha_metric"], 75) - np.percentile(df_eeg["alpha_metric"], 25) < 0:
+                    # Get next song in queue
+                    df_after = df_after.iloc[1:]
+                    st.table(df_after[["tracks", "artists"]].head(2))
+                    print("Try next song from the initially made playlist")
+                    print("Checking for neurofeedback with other songs for alpha waves")
 
     elif option_b is True and option_t is False and option_a is False:
         st.write("Creating High Octane and Adventurous Vibe")
@@ -138,22 +154,31 @@ if col1.button("Start Playing Vibey Music"):
         st.table(df_after[["tracks", "artists"]].head(2))
 
         while True:
-            df_eeg = next(neurofeedback.neurofeedback_fn())
-            if np.percentile(df_eeg[2], 75) - np.percentile(df_eeg[1], 25) > 0:
-                # Get recommendations
-                recommendations = spotify.get_recommendations(
-                    {"seed_tracks": df_final.iloc[0, 14]}
-                )
-                df_after = create_new_queue(recommendations.json()["tracks"])
-                df_after = df_after.iloc[1:]
-                st.table(df_after[["tracks", "artists"]].head(2))
-                spotify.add_to_queue({"uri": recommendations.json()['tracks'][1]['uri']})
-                print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
-            elif np.percentile(df_eeg[2], 75) - np.percentile(df_eeg[1], 25) < 0:
-                # Play next song in queue
-                df_after = df_after.iloc[1:]
-                st.table(df_after[["tracks", "artists"]].head(2))
-                print("Try next song from the initially made playlist")
+            alpha_metric, beta_metric, theta_metric = next(neurofeedback.neurofeedback_fn())
+            new_rows = np.array([[alpha_metric, beta_metric, theta_metric]])
+            chart.add_rows(new_rows)
+            df_eeg = pd.concat([df_eeg, pd.DataFrame([{
+                "alpha_metric": alpha_metric,
+                "beta_metric": beta_metric,
+                "theta_metric": theta_metric
+            }])], ignore_index=True)
+
+            if len(df_eeg) % 10 == 0:
+                if np.percentile(df_eeg["beta_metric"], 75) - np.percentile(df_eeg["alpha_metric"], 25) > 0:
+                    # Get recommendations
+                    recommendations = spotify.get_recommendations(
+                        {"seed_tracks": df_final.iloc[0, 14]}
+                    )
+                    df_after = create_new_queue(recommendations.json()["tracks"])
+                    df_after = df_after.iloc[1:]
+                    st.table(df_after[["tracks", "artists"]].head(2))
+                    spotify.add_to_queue({"uri": recommendations.json()['tracks'][1]['uri']})
+                    print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
+                elif np.percentile(df_eeg["beta_metric"], 75) - np.percentile(df_eeg["alpha_metric"], 25) < 0:
+                    # Play next song in queue
+                    df_after = df_after.iloc[1:]
+                    st.table(df_after[["tracks", "artists"]].head(2))
+                    print("Try next song from the initially made playlist")
 
     elif option_t is True and option_a is False and option_b is False:
         st.write("Creating Focussed Vibe")
@@ -163,81 +188,33 @@ if col1.button("Start Playing Vibey Music"):
         st.table(df_after[["tracks", "artists"]].head(2))
 
         while True:
-            df_eeg = next(neurofeedback.neurofeedback_fn())
-            if np.percentile(df_eeg[3], 75) - np.percentile(df_eeg[3], 25) > 0:
-                recommendations = spotify.get_recommendations(
-                    {"seed_tracks": df_after.iloc[0, 14]}
-                )
-                df_after = create_new_queue(recommendations.json()["tracks"])
-                df_after = df_after.iloc[1:]
-                st.table(df_after[["tracks", "artists"]].head(2))
+            alpha_metric, beta_metric, theta_metric = next(neurofeedback.neurofeedback_fn())
+            new_rows = np.array([[alpha_metric, beta_metric, theta_metric]])
+            chart.add_rows(new_rows)
+            df_eeg = pd.concat([df_eeg, pd.DataFrame([{
+                "alpha_metric": alpha_metric,
+                "beta_metric": beta_metric,
+                "theta_metric": theta_metric
+            }])], ignore_index=True)
 
-                spotify.add_to_queue({"uri": recommendations.json()['tracks'][1]['uri']})
-                print(
-                    "Use metrics from the current spotify song to recommend the next song which is similar to the current song"
-                )
-            elif np.percentile(df_eeg[3], 75) - np.percentile(df_eeg[3], 25) < 0:
-                df_after = df_after.iloc[1:]
-                st.table(df_after[["tracks", "artists"]].head(2))
-                print("Try next song from the initially made playlist")
+            if len(df_eeg) % 10 == 0:
+                if np.percentile(df_eeg["theta_metric"], 75) - np.percentile(df_eeg["theta_metric"], 25) > 0:
+                    recommendations = spotify.get_recommendations(
+                        {"seed_tracks": df_after.iloc[0, 14]}
+                    )
+                    df_after = create_new_queue(recommendations.json()["tracks"])
+                    df_after = df_after.iloc[1:]
+                    st.table(df_after[["tracks", "artists"]].head(2))
 
-    """
-    elif option_a and option_b:
-        st.write("This might be messy but generating high octane relaxing music")
-        df_after = get_df("high octane and relaxing", df_final)
-        spotify.play_track({"uris": [f"spotify:track:{df_after.iloc[0, 14]}"]})
-        st.write("Playing ...")
-        st.table(df_after[["tracks", "artists"]].head(2))
-
-        df_eeg = next(neurofeedback.neurofeedback_fn())
-        if (np.percentile(df_eeg[1], 75) - np.percentile(df_eeg[1], 25) > 0) and (
-                np.percentile(df_eeg[2], 75) - np.percentile(df_eeg[2], 25) > 0
-        ):
-            # Get Recommendations
-            recommendations = spotify.get_recommendations(
-                {"seed_tracks": df_after.iloc[0, 14]}
-            )
-            df_after = create_new_queue(recommendations.json()["tracks"])
-            df_after = df_after.iloc[1:]
-            st.table(df_after[["tracks", "artists"]].head(2))
-            print(
-                "Use metrics from the current spotify song to recommend the next song which is similar to the current song"
-            )
-        else:
-            # Play next song in the playlist
-            df_after = df_after.iloc[1:]
-            st.table(df_after[["tracks", "artists"]].head(2))
-            print("Try next song from the initially made playlist")
-    
-    elif option_a and option_t:
-        st.write("Creating Calm and Focussed Vibes")
-        if (np.percentile(df_eeg[1], 75) - np.percentile(df_eeg[1], 25)>0) and (np.percentile(df_eeg[3], 75) - np.percentile(df_eeg[3], 25)>0):
-            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
-        else:
-            print("Try next song from the initially made playlist")
-
-    elif option_b and option_t:
-        st.write("Creating High Energy and Focussed Vibes")
-        if (np.percentile(df_eeg[2], 75) - np.percentile(df_eeg[2], 25)>0) and (np.percentile(df_eeg[3], 75) - np.percentile(df_eeg[3], 25)>0):
-            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
-        else:
-            print("Try next song from the initially made playlist")
-            
-    elif option_a and option_b and option_t:
-        st.write("Creating Mixed Playlist")
-
-        if (np.percentile(df_eeg[1], 75) - np.percentile(df_eeg[1], 25)>0) and (np.percentile(df_eeg[2], 75) - np.percentile(df_eeg[2], 25)>0) and (np.percentile(df_eeg[3], 75) - np.percentile(df_eeg[3], 25)>0):
-            print("Use metrics from the current spotify song to recommend the next song which is similar to the current song")
-        else:
-            print("Try next song from the initially made playlist")
-    
-    else:
-        st.write("Creating Random Playlist")
-        # No Sorting
-    """
-
+                    spotify.add_to_queue({"uri": recommendations.json()['tracks'][1]['uri']})
+                    print(
+                        "Use metrics from the current spotify song to recommend the next song which is similar to the current song"
+                    )
+                elif np.percentile(df_eeg["theta_metric"], 75) - np.percentile(df_eeg["theta_metric"], 25) < 0:
+                    df_after = df_after.iloc[1:]
+                    st.table(df_after[["tracks", "artists"]].head(2))
+                    print("Try next song from the initially made playlist")
 
 if col2.button("Stop"):
     # This would empty everything inside the container
     placeholder.empty()
-
