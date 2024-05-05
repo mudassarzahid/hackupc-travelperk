@@ -1,3 +1,5 @@
+import time
+
 import requests
 from requests import Response
 
@@ -45,7 +47,9 @@ class Spotify:
 
     def get_audio_features(self, uris) -> Response:
         response = requests.get(
-            self.API_URL + "/audio-features", headers=self.headers, params={"ids": uris}
+            self.API_URL + "/audio-features",
+            headers=self.headers,
+            params={"ids": uris},
         )
 
         return response
@@ -55,6 +59,31 @@ class Spotify:
             self.API_URL + "/search",
             headers=self.headers,
             params={"q": search_term, "type": search_type},
+        )
+
+        return response
+
+    def play_track(self, body) -> Response:
+        response = requests.put(
+            self.API_URL + "/me/player/play",
+            headers=self.headers,
+            json=body,
+        )
+
+        return response
+
+    def get_recommendations(self, params) -> Response:
+        response = requests.get(
+            self.API_URL + "/recommendations", headers=self.headers, params=params
+        )
+
+        return response
+
+    def add_to_queue(self, params) -> Response:
+        response = requests.post(
+            self.API_URL + "/me/player/queue",
+            headers=self.headers,
+            params=params
         )
 
         return response
