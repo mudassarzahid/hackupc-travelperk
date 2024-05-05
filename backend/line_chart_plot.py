@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import time
 import random
+import pandas as pd
 
 # dummpy function to generate data
 def generate_data():
@@ -10,14 +11,13 @@ def generate_data():
     gamma = random.uniform(10.0, 15.0)
     return alpha, beta, gamma
 
-# init the line chart
-status_text = st.sidebar.empty()
-last_rows = np.random.randn(1,3)
-chart = st.line_chart(last_rows)
+# init line chart
+chart_data = pd.DataFrame(np.random.randn(1, 3), columns=["alpha", "beta", "gamma"])
+chart = st.line_chart(chart_data)
 
-# while loop to update the line chart
+# loop to update data
 while True:
     a,b,c = generate_data()
-    new_rows = np.array([[a,b,c]])
-    chart.add_rows(new_rows)
+    chart.add_rows(pd.DataFrame([[a,b,c]],columns=["alpha", "beta", "gamma"]))
     time.sleep(1)
+
