@@ -11,13 +11,25 @@ def generate_data():
     gamma = random.uniform(10.0, 15.0)
     return alpha, beta, gamma
 
-# init line chart
-chart_data = pd.DataFrame(np.random.randn(1, 3), columns=["alpha", "beta", "gamma"])
-chart = st.line_chart(chart_data)
+# Initialize the line chart with 0
+def init_chart():
+    chart_data = pd.DataFrame(np.zeros((1, 3)), columns=["alpha", "beta", "gamma"])
+    chart = st.line_chart(chart_data)
+    return chart
 
-# loop to update data
+# update the line chart with new data
+def update_line_chart(chart, new_data):
+    new_data = pd.DataFrame([new_data], columns=["alpha", "beta", "gamma"])
+    chart.add_rows(new_data)
+
+
+
+chart = init_chart()
 while True:
-    a,b,c = generate_data()
-    chart.add_rows(pd.DataFrame([[a,b,c]],columns=["alpha", "beta", "gamma"]))
+    data = generate_data()
+    update_line_chart(chart, data)
     time.sleep(1)
+
+
+update_line_chart(st, generate_data)
 
