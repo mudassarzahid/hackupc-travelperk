@@ -1,0 +1,64 @@
+/* Range Reset */
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    width: 70%;
+}
+
+/* Removes default focus */
+.slider:focus {
+    outline: none;
+}
+
+/***** Chrome, Safari, Opera and Edge Chromium styles *****/
+/* slider track */
+.slider::-webkit-slider-runnable-track {
+    background-color: var(--dark-blue);
+    border-radius: 0.5rem;
+    height: 0.5rem;
+}
+
+/* slider thumb */
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    margin-top: -12px; /* Centers thumb on the track */
+
+    /*custom styles*/
+    background-color: var(--blue);
+    height: 2rem;
+    width: 1rem;
+}
+
+.slider:focus::-webkit-slider-thumb {
+    border: 1px solid var(--dark-blue);
+    outline: 3px solid var(--dark-blue);
+    outline-offset: 0.125rem;
+}
+
+/******** Firefox styles ********/
+/* slider track */
+.slider::-moz-range-track {
+    background-color: var(--dark-blue);
+    border-radius: 0.5rem;
+    height: 0.5rem;
+}
+
+/* slider thumb */
+.slider::-moz-range-thumb {
+    border: none; /*Removes extra border that FF applies*/
+    border-radius: 0; /*Removes default border-radius that FF applies*/
+
+    /*custom styles*/
+    background-color: var(--blue);
+    height: 2rem;
+    width: 1rem;
+}
+
+.slider:focus::-moz-range-thumb {
+    border: 1px solid var(--dark-blue);
+    outline: 3px solid var(--dark-blue);
+    outline-offset: 0.125rem;
+}

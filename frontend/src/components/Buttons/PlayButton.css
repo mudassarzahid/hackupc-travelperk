@@ -1,0 +1,18 @@
+.play-button {
+    background-color: var(--green);
+    border-radius: 4px;
+    display: inline-block;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 4px 24px 4px 24px;
+}
+
+.play-button:hover {
+    background-color: var(--dark-green);
+}
+
+.play-button:active {
+    position: relative;
+    top: 1px;
+}

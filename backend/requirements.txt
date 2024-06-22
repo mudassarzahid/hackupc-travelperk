@@ -1,7 +1,5 @@
+pandas
+requests
+numpy
 fastapi
-uvicorn
-muselsl
-sqlalchemy
-psycopg2
-spotipy
-streamlit
+pydantic
