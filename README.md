@@ -1,4 +1,5 @@
-## Neuro Feedback Music
+## Vybes
+##### Music recommendations from brain activity analysis 
 ![Example image](/images/example.png)
 
 ## Run App
@@ -31,7 +32,3 @@ npm install --force
 # run
 npm run dev
 ```
-
-## TODOs
-- Use OpenBCI data instead of randomly generated data
-- Recommendations based on multiple selects (e.g. calm & relaxing + high energy & adventurous)
